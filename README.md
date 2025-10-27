@@ -1,12 +1,13 @@
 # MTG ai
 
 ## Ideas
+- Card graph
+- Similar card finder
 - Deck bracket classifier (regressor)
 - Deck builder
-- Similar card finder
-- Card graph
 
 ## Approach
+- Scrape decks on big fashion
 - Embedding with oracle text
 - Train soft-clustering (Amount of archetypes/flavors as clusters [Token, crabs, theft, ...])
 
