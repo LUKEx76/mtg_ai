@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 import umap.umap_ as umap   # pip install umap-learn
 
 DIMENSION = 128  # embedding dimension you trained
-TOP = 1000       # number of cards to visualize
-HIGHLIGHT_CARD = "Sol Ring"
+TOP = 3000       # number of cards to visualize
+HIGHLIGHT_CARD = "Chaos Warp"
 
 # --- Load data ---
 df = pd.read_parquet("data/cards_with_embeddings.parquet")
