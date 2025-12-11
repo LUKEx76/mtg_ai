@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 
 DIMENSIONS = 64
-card_name = "Gonti, Canny Acquisitor"
+card_name = "Sol Ring"
 
 df = pd.read_parquet("data/cards_with_embeddings.parquet")
 
