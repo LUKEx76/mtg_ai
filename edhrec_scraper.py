@@ -11,11 +11,7 @@ HEADERS = {
     "Accept-Language": "en-US,en;q=0.9",
 }
 
-
 def get(url: str, max_retries: int = 3, backoff: float = 1.5) -> requests.Response:
-    """
-    GET with simple retry + backoff. Raises for HTTP errors.
-    """
     last_exc = None
     for attempt in range(1, max_retries + 1):
         try:
@@ -58,7 +54,7 @@ if __name__ == "__main__":
     # the MuZ2MLc8SEtUXZB9xfwdh seems to be the hash of the commanders name Avacyn, Angel of Hope
 
     base_url = "https://json.edhrec.com/pages/decks/"
-    output_dir = "json"
+    output_dir = "data/edhrec/decks"
     os.makedirs(output_dir, exist_ok=True)
     
     df = pd.read_parquet("data/cards_with_embeddings.parquet")
