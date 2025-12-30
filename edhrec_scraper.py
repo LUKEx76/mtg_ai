@@ -43,7 +43,15 @@ def sluggify_commander_name(name: str) -> str:
 
 
 if __name__ == "__main__":
-    # Retrieve from this url: https://json.edhrec.com/pages/decks/the-wise-mothman.json
+    # Static API enpoints:
+    # Decks of a commander: https://json.edhrec.com/pages/decks/{sluggified_commander_name}.json
+    # Average deck of a commander: https://json.edhrec.com/pages/average-decks/{sluggified_commander_name}.json
+    # Stats of a commander: https://json.edhrec.com/pages/commanders/{sluggified_commander_name}.json
+    # Card: https://json.edhrec.com/pages/cards/{sluggified_card_name}.json
+
+    # Dynamic API endpoints:
+    # Decklists
+    
     # for the deck with id : https://edhrec.com/deckpreview/RZ_HK4XKENoKMywO-8nWeQ
     # the link to copy the decklist to the clipboard is: "https://edhrec.com/deckpreview/RZ_HK4XKENoKMywO-8nWeQ#"
     # test_url = "https://edhrec.com/deckpreview/RZ_HK4XKENoKMywO-8nWeQ#"

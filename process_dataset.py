@@ -1,10 +1,10 @@
 import argparse
 import os
-from scripts import dataset_filter, train_embeddings, save_dataset
+from src import dataset_filter, save_dataset, create_modern_bert_embeddings
 
 def process_dataset(input_path):
     df = dataset_filter.filter_dataset(input_path)
-    df = train_embeddings.train_embeddings(df)
+    df = create_modern_bert_embeddings.create_modern_bert_embeddings(df)
     save_dataset.save_dataset(df)
 
 def main():

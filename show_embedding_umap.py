@@ -1,42 +1,34 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import umap.umap_ as umap   # pip install umap-learn
 
-DIMENSION = 128  # embedding dimension you trained
-TOP = 3000       # number of cards to visualize
-HIGHLIGHT_CARD = "Chaos Warp"
+HIGHLIGHT_CARD = "Goblin King"
 
-# --- Load data ---
-df = pd.read_parquet("data/cards_with_embeddings.parquet")
+# 1. Load your processed UMAP data
+print("Loading UMAP data...")
+df = pd.read_parquet("data/cards_with_umap_coords.parquet")
 
-# remove double faced cards for now
-mask_double_faced = df["name"].astype(str).str.contains("//", regex=False, na=False)
-df_filtered = df[~mask_double_faced].copy()
-print(f"Removed {mask_double_faced.sum()} double-faced or split cards")
+# 2. Load Scryfall data (Only columns we need)
+print("Loading Scryfall reference data...")
+# Loading the full JSON can be heavy, so we extract just the map we need
+scry_df = pd.read_json("data/scryfall/oracle-cards-20251022090300.json")
 
-# Keep only rows with valid EDHREC rank
-df_ranked = df_filtered[pd.to_numeric(df_filtered["edhrec_rank"], errors="coerce").notna()].copy()
-df_ranked["edhrec_rank"] = df_ranked["edhrec_rank"].astype(int)
+# --- IMPLEMENTATION START ---
 
-# Take the TOP most played cards
-top = df_ranked.nsmallest(TOP, "edhrec_rank").copy()
+# Create a lookup dictionary: Oracle ID -> Color Identity
+# We use drop_duplicates just in case, though oracle-cards usually is unique.
+print("Mapping color identities...")
+oracle_id_to_ci = scry_df.drop_duplicates('oracle_id').set_index('oracle_id')['color_identity'].to_dict()
 
-# Build a (TOP x DIMENSION) matrix of embeddings
-X = np.vstack(top[f"embedding_{DIMENSION}"].to_numpy())
+# Map the values to your main dataframe
+# If an oracle_id isn't found, it defaults to NaN
+df['color_identity'] = df['oracle_id'].map(oracle_id_to_ci)
 
-# --- UMAP dimensionality reduction ---
-umap_model = umap.UMAP(
-    n_components=2,
-    n_neighbors=30,        # like perplexity; controls local vs global balance
-    min_dist=0.1,          # smaller = tighter clusters, larger = smoother map
-    metric="cosine",       # good for normalized embeddings
-    random_state=42,
-)
+# Fill missing values with empty lists (treat as Colorless)
+df['color_identity'] = df['color_identity'].apply(lambda x: x if isinstance(x, list) else [])
 
-X_2d = umap_model.fit_transform(X)
-top["x"] = X_2d[:, 0]
-top["y"] = X_2d[:, 1]
+# --- IMPLEMENTATION END ---
+
 
 # --- Color setup ---
 def color_id_to_str(cid):
@@ -48,7 +40,7 @@ def color_id_to_str(cid):
         return "C"
     return str(cid)
 
-top["color_id_str"] = top["color_identity"].apply(color_id_to_str)
+df["color_id_str"] = df["color_identity"].apply(color_id_to_str)
 
 COLOR_MAP = {
     "W": np.array([0.95, 0.95, 0.85]),
@@ -63,40 +55,56 @@ def color_identity_to_rgb(cid):
     if isinstance(cid, (list, np.ndarray)):
         if len(cid) == 0:
             return tuple(COLOR_MAP["C"])
-        basis = [COLOR_MAP[c] for c in cid]
+        basis = [COLOR_MAP.get(c, COLOR_MAP["C"]) for c in cid]
     else:
         return tuple(COLOR_MAP["C"])
+    
+    # Average the colors (e.g., Blue + Red = Purple-ish)
     avg = np.mean(basis, axis=0)
     return tuple(avg)
 
-top["plot_color"] = top["color_identity"].apply(color_identity_to_rgb)
+print("calculating plot colors...")
+df["plot_color"] = df["color_identity"].apply(color_identity_to_rgb)
 
 # --- Plot ---
+print("Rendering plot...")
 plt.figure(figsize=(12, 9))
 plt.scatter(
-    top["x"],
-    top["y"],
-    c=top["plot_color"].tolist(),
-    s=40,
-    alpha=0.85,
-    edgecolors="grey",
+    df["x"],
+    df["y"],
+    c=df["plot_color"].tolist(),
+    s=10, # Reduced size slightly for clarity with 30k points
+    alpha=0.6,
+    edgecolors="none", # Removed edgecolors for speed
 )
 
-for _, row in top.iterrows():
-    if row["name"] == HIGHLIGHT_CARD:
-        plt.text(
-            row["x"], row["y"], row["name"],
-            fontsize=10, weight="bold", color="green", alpha=1.0
-        )
-    else:
-        plt.text(
-            row["x"], row["y"], row["name"],
-            fontsize=6, alpha=0.7
-        )
+# Optimized Text Labeling
+# Plotting 30k text labels will freeze matplotlib. 
+# We plot the HIGHLIGHT + a random sample of context cards.
+texts_to_plot = []
 
+# 1. Find the Highlight Card
+highlight_row = df[df["name"] == HIGHLIGHT_CARD]
+if not highlight_row.empty:
+    r = highlight_row.iloc[0]
+    plt.scatter(r["x"], r["y"], c='yellow', s=200, marker='*', edgecolors='black', zorder=10)
+    plt.text(
+        r["x"], r["y"] + 0.5, r["name"],
+        fontsize=12, weight="bold", color="black", 
+        bbox=dict(facecolor='white', alpha=0.8, edgecolor='none')
+    )
+    print(f"Found {HIGHLIGHT_CARD} at {r['x']}, {r['y']}")
 
-plt.title(f"Top {TOP} Commander cards (UMAP on oracle-text embedding)")
-plt.xlabel("UMAP dim 1")
-plt.ylabel("UMAP dim 2")
+# 2. Add some random context labels (e.g., 50 random cards)
+sample_df = df# df.sample(50)
+for _, row in sample_df.iterrows():
+    plt.text(
+        row["x"], row["y"], row["name"],
+        fontsize=6, alpha=0.6, color='black'
+    )
+
+plt.title(f"Magic: The Gathering UMAP (Colors by Identity)")
+plt.xlabel("UMAP Dimension 1")
+plt.ylabel("UMAP Dimension 2")
 plt.tight_layout()
 plt.show()

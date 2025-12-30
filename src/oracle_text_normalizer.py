@@ -56,7 +56,7 @@ def replace_symbol(match):
     return f"MANA_{s} "
 
 
-def clean_oracle(text):
+def clean_tf_idf_oracle_text(text):
     if not isinstance(text, str):
         return ""
 
@@ -85,17 +85,14 @@ def clean_oracle(text):
 
     return text
 
-def normalize_cardname(row):
+def replace_card_name_from_oracle_text(row):
     """Replace occurrences of the card's name in its oracle text with CARDNAME."""
     name = row["name"]
     text = row["oracle_text_clean"]
-
-    if not isinstance(text, str) or not isinstance(name, str):
-        return text
 
     # escape special regex characters in the name (like apostrophes)
     pattern = re.escape(name)
 
     # replace all case-insensitive occurrences of the name with CARDNAME
-    normalized_text = re.sub(pattern, "cardname", text, flags=re.IGNORECASE)
+    normalized_text = re.sub(pattern, "CARDNAME", text, flags=re.IGNORECASE)
     return normalized_text
