@@ -3,7 +3,7 @@ import pandas as pd
 import re
 from sentence_transformers import SentenceTransformer
 
-def create_modern_bert_embeddings(df: pd.DataFrame) -> pd.DataFrame:
+def create_embeddings(df: pd.DataFrame) -> pd.DataFrame:
     model = SentenceTransformer('Alibaba-NLP/gte-modernbert-base', trust_remote_code=True)
 
     print("Expanding card faces...")
@@ -14,8 +14,7 @@ def create_modern_bert_embeddings(df: pd.DataFrame) -> pd.DataFrame:
     expanded_df = pd.DataFrame(expanded_rows)
 
     print("Generating JSON inputs...")
-    
-    # TODO: could improve prompt engineering:
+    # TODO: improve prompt engineering:
     # add low, medium, high mana cost
     # add keywords, ...
     # if want to strip color entirely cut mana_cost, then add something like contains X (to capture spells with X as casting cost)
@@ -43,44 +42,41 @@ def create_modern_bert_embeddings(df: pd.DataFrame) -> pd.DataFrame:
     return expanded_df
 
 def process_card_row(row):
-    """
-    Takes a single row from the original Scryfall DF.
-    Returns a LIST of dicts (1 dict for normal cards, 2+ for multi-face).
-    """
     faces_data = []
 
-    # Multi-face cards (Transform, Modal, etc.)
+    # Multi-face cards
     if 'card_faces' in row and isinstance(row['card_faces'], list):
         for face in row['card_faces']:
             faces_data.append({
-                "name": face.get('name', row['name']), 
-                "parent_name": row['name'],       
                 "oracle_id": row.get('oracle_id'),
+                "name": face.get('name', row['name']), 
+                "parent_name": row['name'],
+                "mana_cost": face.get('mana_cost', ''),
+                "cmc": row.get('cmc', ''),
                 "type_line": face.get('type_line', row.get('type_line', '')),
                 "oracle_text": clean_mtg_text(face.get('oracle_text', ''), face.get('name', row['name'])),
-                "mana_cost": face.get('mana_cost', ''),
-                "cmc": row.get('cmc', ''), # CMC is usually on the parent for old DFCs, but safe here
-                "colors": row.get('colors', ''),
-                "power": face.get('power', ''), # Empty string if missing
+                "power": face.get('power', ''),
                 "toughness": face.get('toughness', ''),
-                # Check face first for loyalty (Planeswalkers), fallback to row
-                "loyalty": face.get('loyalty', row.get('loyalty', '')), 
+                "loyalty": face.get('loyalty', row.get('loyalty', '')),
+                "colors": row.get('colors', ''),
+                "color_identity": row.get('color_identity', ''),
                 "face_type": "multi"
             })
     else:
         # Normal single-faced card
         faces_data.append({
+            "oracle_id": row.get('oracle_id'),
             "name": row['name'],
             "parent_name": row['name'],
-            "oracle_id": row.get('oracle_id'),
-            "type_line": row.get('type_line', ''),
-            "oracle_text": clean_mtg_text(row.get('oracle_text', ''), row['name']),
             "mana_cost": row.get('mana_cost', ''),
             "cmc": row.get('cmc', ''),
-            "colors": row.get('colors', ''),
+            "type_line": row.get('type_line', ''),
+            "oracle_text": clean_mtg_text(row.get('oracle_text', ''), row['name']),
             "power": row.get('power', ''),
             "toughness": row.get('toughness', ''),
             "loyalty": row.get('loyalty', ''),
+            "colors": row.get('colors', ''),
+            "color_identity": row.get('color_identity', ''),
             "face_type": "single"
         })
         
@@ -102,7 +98,8 @@ def clean_mtg_text(text, card_name):
         for name in names_to_replace:
             text = re.sub(re.escape(name), 'CARDNAME', text, flags=re.IGNORECASE)
 
-    # Remove generic transform keywords (Uncommented and Fixed)
+    # TODO: add to this
+    # Remove generic transform keywords
     keywords_to_strip = ["Daybound", "Nightbound", "Transform"] 
     for k in keywords_to_strip:
         text = text.replace(k, "")

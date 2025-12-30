@@ -1,4 +1,6 @@
 import pandas as pd
+import os
 
-def save_dataset(df:pd.DataFrame):
-    df.to_parquet("cards_with_embeddings.parquet", index=False)
+def save_dataset(df: pd.DataFrame, filepath: str):
+    df.to_parquet(filepath, index=False)
+    print(f"Successfully saved dataframe to {filepath}")

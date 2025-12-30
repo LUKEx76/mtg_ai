@@ -20,16 +20,10 @@
 
 
 ## TODOs:
-- Use latest version of oracle text
-- Handle two faced cards
 - Add planeswalkers that can be commanders to the scraping
-- Train new embedding that takes more than oracle text into account
 - Scrape decks from edhrec
-- Train bracket regressor
-- Create interactive graph of similar cards
 
 
 ### Remarks
 - Only commander-legal cards are considered
 - Be aware of partner commanders
-- Normalization for oracle text could improve (Planeswalkers, TREASURE TOKEN, empty text, CARD_NAME, ...)

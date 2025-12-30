@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 
-card_name = "Kalamax, the Stormsire"
+card_name = "Goblin King"
 
 df = pd.read_parquet("data/cards_with_embeddings.parquet")
 
