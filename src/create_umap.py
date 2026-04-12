@@ -2,19 +2,20 @@ import umap.umap_ as umap
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
+from typing import Final
 
-N_NEAREST_NEIGHBORS = 15
-MIN_DISTANCE = 0.1
-METRIC = 'cosine'
-SEED = 1893
+N_NEAREST_NEIGHBORS: Final[int] = 15
+MIN_DISTANCE: Final[float] = 0.1
+METRIC: Final[str] = 'cosine'
+SEED: Final[int] = 1893
 
-def create_umap(df:pd.DataFrame) -> pd.DataFrame:
+def create_umap(df: pd.DataFrame) -> pd.DataFrame:
     print("Running UMAP projection")
-    embedding_matrix = np.stack(df['embedding'].values)
+    embedding_matrix: np.ndarray = np.stack(arrays=df['embedding'].values)
 
-    # metric='cosine': Best for semantic embeddings (BERT models)
-    # n_neighbors: Controls cluster size (Higher = focus on global structure, Lower = focus on local clumps)
-    # min_dist: Controls how tightly points are packed (Lower = tighter clumps)
+    # use cosine metric for bert
+    # controls cluster size
+    # controls packing density
     reducer = umap.UMAP(
         n_components=2, 
         n_neighbors=N_NEAREST_NEIGHBORS, 
@@ -24,19 +25,18 @@ def create_umap(df:pd.DataFrame) -> pd.DataFrame:
         verbose=True
     )
 
-    umap_coords = reducer.fit_transform(embedding_matrix)
+    umap_coords: np.ndarray = reducer.fit_transform(X=embedding_matrix)
     df['x'] = umap_coords[:, 0]
     df['y'] = umap_coords[:, 1]
 
-    # Normalize coordinates to a specific range (e.g., -100 to 100)
+    # normalize coordinates
     scaler = StandardScaler()
-    scaled_coords = scaler.fit_transform(df[['x', 'y']])
+    scaled_coords: np.ndarray = scaler.fit_transform(X=df[['x', 'y']])
     df['x'] = scaled_coords[:, 0] * 100
     df['y'] = scaled_coords[:, 1] * 100
 
-    # Compross data
-    df['x'] = df['x'].round(4)
-    df['y'] = df['y'].round(4)
+    df['x'] = df['x'].round(decimals=4)
+    df['y'] = df['y'].round(decimals=4)
 
     print(f"Max x value of map {df['x'].max()}")
     print(f"Min x value of map {df['x'].min()}")

@@ -1,16 +1,24 @@
 import pandas as pd
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
+from typing import List
 
-card_name = "Goblin King"
+def find_similar_cards(card_name: str, top_n: int = 5) -> None:
+    df: pd.DataFrame = pd.read_parquet(path="data/cards_with_embeddings.parquet")
 
-df = pd.read_parquet("data/cards_with_embeddings.parquet")
+    if card_name not in df['name'].values:
+        print(f"Card '{card_name}' not found in dataset.")
+        return
 
-row = df[df['name'] == card_name].iloc[0]
-vec = row[f'embedding'].reshape(1, -1)
+    row: pd.Series = df[df['name'] == card_name].iloc[0]
+    vec: np.ndarray = row['embedding'].reshape(1, -1)
 
-# compare against all cards
-all_vecs = np.vstack(df[f'embedding'].to_numpy())
-sims = cosine_similarity(vec, all_vecs)[0]
+    all_vecs: np.ndarray = np.vstack(tup=df['embedding'].to_numpy())
+    sims: np.ndarray = cosine_similarity(X=vec, Y=all_vecs)[0]
 
-print(df.assign(sim=sims).sort_values('sim', ascending=False).head(5)[['name', 'sim', 'oracle_text']])
+    result_df: pd.DataFrame = df.assign(sim=sims).sort_values(by='sim', ascending=False).head(n=top_n)
+    print(result_df[['name', 'sim', 'oracle_text']])
+
+if __name__ == "__main__":
+    target_card: str = "Goblin King"
+    find_similar_cards(card_name=target_card, top_n=5)

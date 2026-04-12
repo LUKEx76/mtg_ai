@@ -1,24 +1,24 @@
 import re
+from typing import Match
 
-# regex to capture anything inside {}
-def normalize_symbol(match) -> str:
-    replacement = replace_symbol(match)
+def normalize_symbol(match: Match) -> str:
+    replacement = replace_symbol(match=match)
     return replacement + " "
 
 
-def replace_symbol(match):
+def replace_symbol(match: Match) -> str:
     symbol = match.group(1)
     s = symbol.upper()
 
-    # numeric generic mana, e.g. {1}, {2}
+    # numeric mana
     if s.isdigit():
         return "MANA_GENERIC "
 
-    # single color mana
+    # color mana
     if s in {"W", "U", "B", "R", "G"}:
         return f"MANA_{s} "
 
-    # variable or special
+    # special symbols
     if s == "X":
         return "MANA_VARIABLE "
     if s == "T":
@@ -42,13 +42,13 @@ def replace_symbol(match):
     if s == "H":
         return "HALF_MANA"
 
-    # hybrid mana (e.g., {W/U}, {2/G})
+    # hybrid mana
     if "/" in s and "P" not in s:
         parts = s.split("/")
         joined = "_".join(parts)
         return f"MANA_HYBRID_{joined} "
 
-    # phyrexian mana (e.g., {W/P})
+    # phyrexian mana
     if s.endswith("/P"):
         color = s.split("/")[0]
         return f"MANA_{color}_PHYREXIAN "
@@ -56,43 +56,43 @@ def replace_symbol(match):
     return f"MANA_{s} "
 
 
-def clean_tf_idf_oracle_text(text):
+def clean_tf_idf_oracle_text(text: str) -> str:
     if not isinstance(text, str):
         return ""
 
-    # remove reminder text in parentheses
-    text = re.sub(r"\([^)]*\)", "", text)
+    # remove reminder text
+    text = re.sub(pattern=r"\([^)]*\)", repl="", string=text)
 
-    # replace newlines with a sentence boundary
+    # replace newlines
     text = text.replace(" \n", ". ")
     text = text.replace("\n", ". ")
 
-    # normalize bullet points and option separators
+    # normalize bullet points
     text = text.replace("•", " OPTION ")
 
-    # normalize "—" after 'Choose one —' to a readable token
-    text = re.sub(r"choose\s+(one|two|one or both)\s+—", r"choose \1 :", text, flags=re.IGNORECASE)
+    # normalize choice separators
+    text = re.sub(pattern=r"choose\s+(one|two|one or both)\s+—", repl=r"choose \1 :", string=text, flags=re.IGNORECASE)
 
-    # replace mana and activation symbols
-    text = re.sub(r"\{([^}]*)\}", normalize_symbol, text)
+    # replace symbols
+    text = re.sub(pattern=r"\{([^}]*)\}", repl=normalize_symbol, string=text)
 
-    # collapse multiple spaces and dots
-    text = re.sub(r"\s+", " ", text)
-    text = re.sub(r"\.\s*\.", ".", text)
+    # fix spacing
+    text = re.sub(pattern=r"\s+", repl=" ", string=text)
+    text = re.sub(pattern=r"\.\s*\.", repl=".", string=text)
 
     text = text.replace(" ,", ",").replace(" .", ".").replace(" :", ":")
     text = text.lower().strip()
 
     return text
 
-def replace_card_name_from_oracle_text(row):
-    """Replace occurrences of the card's name in its oracle text with CARDNAME."""
+def replace_card_name_from_oracle_text(row: dict) -> str:
+    """replace card name with cardname"""
     name = row["name"]
     text = row["oracle_text_clean"]
 
-    # escape special regex characters in the name (like apostrophes)
-    pattern = re.escape(name)
+    # escape regex characters
+    pattern = re.escape(string=name)
 
-    # replace all case-insensitive occurrences of the name with CARDNAME
-    normalized_text = re.sub(pattern, "CARDNAME", text, flags=re.IGNORECASE)
+    # replace card name
+    normalized_text = re.sub(pattern=pattern, repl="CARDNAME", string=text, flags=re.IGNORECASE)
     return normalized_text
