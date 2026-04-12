@@ -8,8 +8,8 @@ EXCLUDE_LAYOUTS = {
 }
 
 USEFUL_COLUMNS = [
-        "oracle_id", "name", "card_faces", "mana_cost", "cmc", "type_line", "oracle_text",
-        "power", "toughness", "loyalty", "colors", "color_identity", "keywords", "game_changer"
+        "oracle_id", "name", "card_faces", "mana_cost", "cmc", "type_line", "oracle_text", "power", 
+        "toughness", "loyalty", "colors", "color_identity", "keywords", "game_changer", "set"
 ]
 
 def clean_text_encoding(text:str):
