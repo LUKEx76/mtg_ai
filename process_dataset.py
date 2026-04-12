@@ -15,13 +15,13 @@ def main() -> None:
     parser.add_argument("input_json", help="Path to the input scryfall JSON dataset")
 
     args = parser.parse_args()
-    input_path: str = args.input_json
+    input_path = args.input_json
 
     if not os.path.isfile(path=input_path):
         raise FileNotFoundError(f"Input file not found: {input_path}")
 
     print(f"Processing {input_path} ...")
-    df: pd.DataFrame = pd.read_json(path_or_buf=input_path)
+    df = pd.read_json(path_or_buf=input_path)
     process_dataset(df=df)
     print("Done.")
 

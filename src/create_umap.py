@@ -2,16 +2,15 @@ import umap.umap_ as umap
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
-from typing import Final
 
-N_NEAREST_NEIGHBORS: Final[int] = 15
-MIN_DISTANCE: Final[float] = 0.1
-METRIC: Final[str] = 'cosine'
-SEED: Final[int] = 1893
+N_NEAREST_NEIGHBORS = 15
+MIN_DISTANCE = 0.1
+METRIC = 'cosine'
+SEED = 1893
 
 def create_umap(df: pd.DataFrame) -> pd.DataFrame:
     print("Running UMAP projection")
-    embedding_matrix: np.ndarray = np.stack(arrays=df['embedding'].values)
+    embedding_matrix = np.stack(arrays=df['embedding'].values)
 
     # use cosine metric for bert
     # controls cluster size
@@ -25,13 +24,13 @@ def create_umap(df: pd.DataFrame) -> pd.DataFrame:
         verbose=True
     )
 
-    umap_coords: np.ndarray = reducer.fit_transform(X=embedding_matrix)
+    umap_coords = reducer.fit_transform(X=embedding_matrix)
     df['x'] = umap_coords[:, 0]
     df['y'] = umap_coords[:, 1]
 
     # normalize coordinates
     scaler = StandardScaler()
-    scaled_coords: np.ndarray = scaler.fit_transform(X=df[['x', 'y']])
+    scaled_coords = scaler.fit_transform(X=df[['x', 'y']])
     df['x'] = scaled_coords[:, 0] * 100
     df['y'] = scaled_coords[:, 1] * 100
 

@@ -8,7 +8,7 @@ def create_embeddings(df: pd.DataFrame) -> pd.DataFrame:
     model = SentenceTransformer(model_name_or_path='Alibaba-NLP/gte-modernbert-base', trust_remote_code=True)
 
     print("Expanding card faces...")
-    expanded_rows: List[Dict[str, Any]] = []
+    expanded_rows = []
     for _, row in df.iterrows():
         expanded_rows.extend(process_card_row(row=row))
     
@@ -38,7 +38,7 @@ def create_embeddings(df: pd.DataFrame) -> pd.DataFrame:
     return expanded_df
 
 def process_card_row(row: pd.Series) -> List[Dict[str, Any]]:
-    faces_data: List[Dict[str, Any]] = []
+    faces_data = []
 
     if 'card_faces' not in row or not isinstance(row['card_faces'], list):
         faces_data.append({
@@ -105,7 +105,7 @@ def clean_mtg_text(text: str, card_name: str) -> str:
 
 def clean_and_serialize(row_dict: Dict[str, Any]) -> str:
     """removes empty fields and converts floats to ints"""
-    clean_data: Dict[str, Any] = {}
+    clean_data = {}
     
     for key, value in row_dict.items():
         # skip empty values

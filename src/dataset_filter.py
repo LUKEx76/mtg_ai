@@ -23,7 +23,7 @@ def clean_card_faces(faces_list: Any) -> Any:
     if not isinstance(faces_list, list):
         return faces_list
     
-    cleaned_list: List[Dict[str, Any]] = []
+    cleaned_list = []
     for face in faces_list:
         if not isinstance(face, dict):
             cleaned_list.append(face)

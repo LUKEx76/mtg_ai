@@ -13,13 +13,13 @@ def create_json(df: pd.DataFrame, output_path: str) -> None:
     df["cmc"] = df["cmc"].astype(dtype=int)
 
     # rename to short columns
-    final_df: pd.DataFrame = df.rename(columns={
+    final_df = df.rename(columns={
         "name": "n",
         "type_line": "t",
         "oracle_id": "oid"
     })
 
-    cols_to_keep: List[str] = ["n", "x", "y", "ci", "cmc", "t", "oid"]
+    cols_to_keep = ["n", "x", "y", "ci", "cmc", "t", "oid"]
     final_df = final_df[cols_to_keep].dropna(subset=["x", "y"])
 
     final_df.to_json(path_or_buf=output_path, orient="records")

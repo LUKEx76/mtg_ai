@@ -7,16 +7,16 @@ import pandas as pd
 import requests
 from typing import List, Dict, Any
 
-HEADERS: Dict[str, str] = {
+HEADERS = {
     "User-Agent": "Mozilla/5.0 (compatible; MTG-EDHREC-Scraper/0.1; +https://example.com/your-contact)",
     "Accept-Language": "en-US,en;q=0.9",
 }
 
 def get(url: str, max_retries: int = 3, backoff: float = 1.5) -> requests.Response:
-    last_exc: Exception = None
+    last_exc = None
     for attempt in range(1, max_retries + 1):
         try:
-            resp: requests.Response = requests.get(url=url, headers=HEADERS, timeout=20)
+            resp = requests.get(url=url, headers=HEADERS, timeout=20)
             if 200 <= resp.status_code < 300:
                 return resp
             # backoff for rate limits or errors
@@ -33,20 +33,20 @@ def get(url: str, max_retries: int = 3, backoff: float = 1.5) -> requests.Respon
     raise RuntimeError(f"Failed to GET {url}")
 
 def sluggify(sub_name: str) -> str:
-    normalized: str = unicodedata.normalize('NFKD', sub_name)
-    name_ascii: str = normalized.encode('ascii', 'ignore').decode('utf-8')
-    name_lower: str = name_ascii.lower()
-    name_clean: str = str(name_lower).replace("//","-")
+    normalized = unicodedata.normalize('NFKD', sub_name)
+    name_ascii = normalized.encode('ascii', 'ignore').decode('utf-8')
+    name_lower = name_ascii.lower()
+    name_clean = str(name_lower).replace("//","-")
     name_clean = re.sub(pattern=r'[^\w\s-]', repl='', string=name_clean)
-    slug: str = re.sub(pattern=r'[-\s]+', repl='-', string=name_clean).strip('-')
+    slug = re.sub(pattern=r'[-\s]+', repl='-', string=name_clean).strip('-')
     return slug
 
 def sluggify_card_name(name: str) -> List[str]:
-    slug_list: List[str] = []
+    slug_list = []
     slug_list.append(sluggify(sub_name=name))
 
     if "//" in name:
-        split_name: str = name.split("//")[0]
+        split_name = name.split("//")[0]
         slug_list.append(sluggify(sub_name=split_name))
 
     # name exceptions
@@ -63,31 +63,31 @@ def sluggify_card_name(name: str) -> List[str]:
 
 
 if __name__ == "__main__":
-    base_url: str = "https://json.edhrec.com/pages/cards/"
-    output_dir: str = "data/edhrec/cards"
+    base_url = "https://json.edhrec.com/pages/cards/"
+    output_dir = "data/edhrec/cards"
     os.makedirs(name=output_dir, exist_ok=True)
     
-    df: pd.DataFrame = pd.read_excel(io="data/commander_legal_pixel_art.xlsx")
-    total: int = len(df)
+    df = pd.read_excel(io="data/commander_legal_pixel_art.xlsx")
+    total = len(df)
 
     for i, (index, row) in enumerate(iterable=df.iterrows(), start=1):
         print(f"\r({i}/{total}) {int((i/total)*100)}% - ", end="")
-        name: str = row["name"]
-        clean_names: List[str] = sluggify_card_name(name=name)
+        name = row["name"]
+        clean_names = sluggify_card_name(name=name)
 
         for clean_name in clean_names:
-            file_path: str = os.path.join(output_dir, f"{clean_name}.json")
+            file_path = os.path.join(output_dir, f"{clean_name}.json")
 
             if os.path.exists(path=file_path):
                 print(f"Skipping {clean_name} (already exists)")
                 continue
 
-            url: str = f"{base_url}{clean_name}.json"
+            url = f"{base_url}{clean_name}.json"
 
             try:
                 print(f"Fetching: {clean_name}...")
-                response: requests.Response = get(url=url)
-                data: Any = response.json()
+                response = get(url=url)
+                data = response.json()
                 
                 with open(file=file_path, mode="w", encoding="utf-8") as f:
                     json.dump(obj=data, fp=f, indent=4)
@@ -103,3 +103,4 @@ if __name__ == "__main__":
             time.sleep(0.1)
 
     print("Done scraping cards")
+
