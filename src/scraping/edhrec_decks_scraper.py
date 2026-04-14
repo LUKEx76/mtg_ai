@@ -1,14 +1,13 @@
 import json
 import os
-import re
 import time
-import unicodedata
 import pandas as pd
 import requests
-from typing import List, Dict, Any
+
+from common.text_normalizing import sluggify_card_name
 
 HEADERS = {
-    "User-Agent": "Mozilla/5.0 (compatible; MTG-EDHREC-Scraper/0.1; +https://example.com/your-contact)",
+    "User-Agent": "Mozilla/5.0 (compatible; MTG-EDHREC-Scraper/0.1; +https://luca-ruf.de)",
     "Accept-Language": "en-US,en;q=0.9",
 }
 
@@ -32,34 +31,6 @@ def get(url: str, max_retries: int = 3, backoff: float = 1.5) -> requests.Respon
         raise last_exc
     raise RuntimeError(f"Failed to GET {url}")
 
-def sluggify(sub_name: str) -> str:
-    normalized = unicodedata.normalize('NFKD', sub_name)
-    name_ascii = normalized.encode('ascii', 'ignore').decode('utf-8')
-    name_lower = name_ascii.lower()
-    name_clean = str(name_lower).replace("//","-")
-    name_clean = re.sub(pattern=r'[^\w\s-]', repl='', string=name_clean)
-    slug = re.sub(pattern=r'[-\s]+', repl='-', string=name_clean).strip('-')
-    return slug
-
-def sluggify_card_name(name: str) -> List[str]:
-    slug_list = []
-    slug_list.append(sluggify(sub_name=name))
-
-    if "//" in name:
-        split_name = name.split("//")[0]
-        slug_list.append(sluggify(sub_name=split_name))
-
-    # name exceptions
-    if name == "+2 Mace":
-        slug_list.append("plus-2-mace")
-    elif name == "Summon: Choco/Mog":
-        slug_list.append("summon-choco-mog")
-    elif name == "Welcome to . . . // Jurassic Park":
-        slug_list.append("welcome-to-")
-    elif name == "SP//dr, Piloted by Peni":
-        slug_list.append("sp-dr-piloted-by-peni")
-    
-    return slug_list
 
 
 if __name__ == "__main__":

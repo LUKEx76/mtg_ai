@@ -1,6 +1,6 @@
+from typing import Any
 import pandas as pd
-import ftfy
-from typing import List, Dict, Any, Optional
+from common.text_normalizing import clean_text_encoding
 
 # layouts to exclude
 EXCLUDE_LAYOUTS = {
@@ -13,11 +13,6 @@ USEFUL_COLUMNS = [
         "toughness", "loyalty", "colors", "color_identity", "keywords", "game_changer", "set"
 ]
 
-def clean_text_encoding(text: Optional[str]) -> Optional[str]:
-    if isinstance(text, str):
-        # repair encoding errors
-        return ftfy.fix_text(text=text) 
-    return text
 
 def clean_card_faces(faces_list: Any) -> Any:
     if not isinstance(faces_list, list):
@@ -40,16 +35,19 @@ def clean_card_faces(faces_list: Any) -> Any:
     return cleaned_list
 
 def filter_dataset(df: pd.DataFrame) -> pd.DataFrame:
-    print("Loading dataset...")
+    """ return clean dataframe of commander-legal cards """
 
+    # filter layouts    
     if "layout" in df.columns:
-        df = df[~df["layout"].isin(element=EXCLUDE_LAYOUTS)]
+        df = df[~df["layout"].isin(values=EXCLUDE_LAYOUTS)]
 
+    # filter commander legal
     df = df[df["legalities"].apply(func=lambda l: isinstance(l, dict) and l.get("commander") == "legal")]
 
+    # filter newest printing
     df = df.drop_duplicates(subset='oracle_id', keep='last')
 
-    print("Cleaning text encodings...")
+    # clean text columns
     text_cols = ["name", "type_line", "oracle_text"]
     for col in text_cols:
         df[col] = df[col].apply(func=clean_text_encoding)
@@ -57,5 +55,5 @@ def filter_dataset(df: pd.DataFrame) -> pd.DataFrame:
     if "card_faces" in df.columns:
         df["card_faces"] = df["card_faces"].apply(func=clean_card_faces)
 
-    print("Dataset has been filtered and cleaned.")
+    # filter columns
     return df[USEFUL_COLUMNS].copy(deep=True).reset_index(drop=True)
